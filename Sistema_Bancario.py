@@ -72,17 +72,37 @@ def main():
     nome = home()  # Primeiro chama o home
 
     LIMITE_SAQUES = 3
+    LIMITE_OPERACOES_DIARIAS = 10
+
     saldo = 0
     limite = 500
     extrato = ""
     numero_saques = 0
+    contador_operacoes_dia = 0
+    data_ultima_operacao = datetime.now().date()
 
     while True:
+        # Verifica se mudou o dia para resetar o contador
+        data_atual = datetime.now().date()
+        if data_atual != data_ultima_operacao:
+            contador_operacoes_dia = 0
+            numero_saques = 0  # reseta também os saques diários
+            data_ultima_operacao = data_atual
+
         opcao = menu(nome)
+
+        # Antes de qualquer operação que conta, verifica limite diário
+        if opcao in ["1", "2"]:
+            if contador_operacoes_dia >= LIMITE_OPERACOES_DIARIAS:
+                print("\n△△△ Limite diário de 10 operações atingido. Tente novamente amanhã. △△△")
+                continue
 
         if opcao == "1":
             valor = input("Informe o valor do depósito: ")
             saldo, extrato = depositar(saldo, valor, extrato)
+            # Se depósito válido, conta a operação
+            if valor and validar_valor(valor) is not None:
+                contador_operacoes_dia += 1
 
         elif opcao == "2":
             valor = input("Informe o valor do saque: ")
@@ -94,6 +114,9 @@ def main():
                 numero_saques=numero_saques,
                 limite_saques=LIMITE_SAQUES,
             )
+            # Se saque válido (saldo suficiente, limite e saques OK), conta a operação
+            if valor and validar_valor(valor) is not None:
+                contador_operacoes_dia += 1
 
         elif opcao == "3":
             exibir_extrato(saldo, extrato=extrato)
